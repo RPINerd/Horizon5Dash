@@ -3,7 +3,6 @@
 # and display it in real time in a customizable dashboard.
 #
 
-import json
 import socket
 import sys
 
@@ -51,7 +50,7 @@ def open_socket(server_address, port) -> socket.socket:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Bind the socket to the port
-    sock.bind(server_address)
+    sock.bind((server_address, port))
 
     return sock
 
@@ -86,18 +85,10 @@ def main():
         yaw = returned_data["Yaw"]
         pitch = returned_data["Pitch"]
         roll = returned_data["Roll"]
-        normalizedSuspensionTravelFL = returned_data[
-            "NormalizedSuspensionTravelFrontLeft"
-        ]
-        normalizedSuspensionTravelFR = returned_data[
-            "NormalizedSuspensionTravelFrontRight"
-        ]
-        normalizedSuspensionTravelRL = returned_data[
-            "NormalizedSuspensionTravelRearLeft"
-        ]
-        normalizedSuspensionTravelRR = returned_data[
-            "NormalizedSuspensionTravelRearRight"
-        ]
+        suspensionTravelNormFL = returned_data["NormalizedSuspensionTravelFrontLeft"]
+        suspensionTravelNormFR = returned_data["NormalizedSuspensionTravelFrontRight"]
+        suspensionTravelNormRL = returned_data["NormalizedSuspensionTravelRearLeft"]
+        suspensionTravelNormRR = returned_data["NormalizedSuspensionTravelRearRight"]
         tireSlipRatioFrontLeft = returned_data["TireSlipRatioFrontLeft"]
         tireSlipRatioFrontRight = returned_data["TireSlipRatioFrontRight"]
         tireSlipRatioRearLeft = returned_data["TireSlipRatioRearLeft"]
@@ -110,16 +101,10 @@ def main():
         tireCombinedSlipFrontRight = returned_data["TireCombinedSlipFrontRight"]
         tireCombinedSlipRearLeft = returned_data["TireCombinedSlipRearLeft"]
         tireCombinedSlipRearRight = returned_data["TireCombinedSlipRearRight"]
-        suspensionTravelMetersFrontLeft = returned_data[
-            "SuspensionTravelMetersFrontLeft"
-        ]
-        suspensionTravelMetersFrontRight = returned_data[
-            "SuspensionTravelMetersFrontRight"
-        ]
-        suspensionTravelMetersRearLeft = returned_data["SuspensionTravelMetersRearLeft"]
-        suspensionTravelMetersRearRight = returned_data[
-            "SuspensionTravelMetersRearRight"
-        ]
+        suspensionTravelAbsFL = returned_data["SuspensionTravelMetersFrontLeft"]
+        suspensionTravelAbsFR = returned_data["SuspensionTravelMetersFrontRight"]
+        suspensionTravelAbsRL = returned_data["SuspensionTravelMetersRearLeft"]
+        suspensionTravelAbsRR = returned_data["SuspensionTravelMetersRearRight"]
         speed = returned_data["Speed"]
         power = returned_data["Power"]
         torque = returned_data["Torque"]
@@ -135,6 +120,7 @@ def main():
         gear = returned_data["Gear"]
         steer = returned_data["Steer"]
 
+        print(f"Speed: {speed}\nRPM: {currentEngineRpm}\n")
         # Unused data (for now)
         # raceOn = returned_data["IsRaceOn"]
         # timestamp = returned_data["TimestampMS"]
@@ -176,3 +162,7 @@ def main():
         # racePosition = returned_data["RacePosition"]
         # normalizedDrivingLine = returned_data["NormalizedDrivingLine"]
         # normalizedAIBrakeDifference = returned_data["NormalizedAIBrakeDifference"]
+
+
+if __name__ == "__main__":
+    main()
