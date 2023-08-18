@@ -21,7 +21,7 @@ BYTESKU = {
 }
 
 
-def get_data(data):
+def get_data(data, data_types):
     return_dict = {}
 
     # Additional var
@@ -29,7 +29,7 @@ def get_data(data):
 
     # For each data type, get size and then collect
     for key in data:
-        d_type = data[key]
+        d_type = data_types[key]
         size = BYTESKU[d_type]
         current = passed_data[:size]
 
