@@ -6,3 +6,7 @@
 
 # Python cache files
 __pycache__/
+
+# Misc
+server.py
+telemetry_log.tsv
