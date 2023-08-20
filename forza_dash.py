@@ -3,11 +3,13 @@
 # and display it in real time in a customizable dashboard.
 #
 
+import argparse
 import socket
 import struct
-import sys
+from time import sleep
 
 import carstat
+import dummy_dash
 
 # Assigning sizes in bytes to each variable type
 BYTESKU = {
@@ -21,14 +23,49 @@ BYTESKU = {
 }
 
 
-def get_data(data, data_types):
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Forza Dash")
+    parser.add_argument(
+        "--ip",
+        "-i",
+        type=str,
+        default="192.168.0.126",
+        help="IP address of the telemetry server",
+    )
+    parser.add_argument(
+        "--port",
+        "-p",
+        type=int,
+        default=10000,
+        help="Port of the telemetry server",
+    )
+    run_type = parser.add_mutually_exclusive_group(required=False)
+    run_type.add_argument(
+        "--log",
+        "-l",
+        action="store_true",
+        default=False,
+        help="Dump the telemetry data to a log file",
+    )
+    run_type.add_argument(
+        "--dryrun",
+        "-d",
+        action="store_true",
+        default=False,
+        help="Run the program without connecting to a telemetry server",
+    )
+
+    return parser.parse_args()
+
+
+def get_data(data, data_types) -> dict:
     return_dict = {}
 
     # Additional var
     passed_data = data
 
     # For each data type, get size and then collect
-    for key in data:
+    for key in data_types:
         d_type = data_types[key]
         size = BYTESKU[d_type]
         current = passed_data[:size]
@@ -67,7 +104,7 @@ def open_socket(server_address, port) -> socket.socket:
     return sock
 
 
-def main():
+def main(args) -> None:
     # Read in data types from file
     data_types = {}
     with open("data_formats.txt", "r") as f:
@@ -76,25 +113,43 @@ def main():
             data_types[line.split()[1]] = line.split()[0]
 
     # Establish connection to the telemetry output
-    print("Establishing Socket...")
-    sock = open_socket("localhost", 1337)
+    sock = open_socket(str(args.ip), 10000)
+
+    # Open log file if needed
+    if args.log:
+        log_file = open("telemetry_log.tsv", "w")
+
+    print("Speed | RPM | Gear")
 
     # Primary loop
     while True:
         # Recieve incoming data
         data, address = sock.recvfrom(1500)
 
-        print(data)
-        print(address)
-
         # Convert recieved data to a dictionary
         returned_data = get_data(data, data_types)
 
         # Create a carstat object with the parsed data
-        telemetry = carstat.CarStat(returned_data)
+        telemetry = carstat.telemetry(returned_data)
 
-        print(f"Speed: {telemetry.speed}\nRPM: {telemetry.currentEngineRpm}\n")
+        # Write all items in returned_data to a telemetry log file, tab delimited
+        if args.log:
+            for key in returned_data:
+                log_file.write(str(returned_data[key]) + "\t")
+            log_file.write("\n")
+
+        # Print some small monitoring data
+        print(
+            f"{int(telemetry.speed)} | {int(telemetry.rpm)} | {str(telemetry.gear)}",
+            end="\r",
+        )
 
 
 if __name__ == "__main__":
-    main()
+
+    args = parse_args()
+    
+    if args.dryrun:
+        dummy_dash.main()
+    else:
+        main(args)
