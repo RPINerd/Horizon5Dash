@@ -3,6 +3,7 @@
 from time import sleep
 
 import carstat
+import dashboard
 
 
 def parse_data(data, data_types) -> dict:
@@ -27,20 +28,22 @@ def main() -> None:
         for line in lines:
             data_types[line.split()[1]] = line.split()[0]
 
+    #dashboard.build()
+
+    dashboard.plot()
+
     print("Speed | RPM | Gear")
     with open("telemetry_log.tsv", "r") as data:
         for line in data:
             cols = line.split("\t")
             returned_data = parse_data(cols, data_types)
             telemetry = carstat.telemetry(returned_data)
+            #dashboard.update(telemetry)
             print(
                 f"{int(float(telemetry.speed))} | {int(float(telemetry.rpm))} | {str(telemetry.gear)}",
                 end="\r",
             )
-            sleep(0.05)
-
-            f"{int(telemetry.speed)} | {int(telemetry.rpm)} | {str(telemetry.gear)}",
-            end="\r",
+            sleep(0.001)
 
 
 if __name__ == "__main__":

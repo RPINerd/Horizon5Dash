@@ -6,9 +6,9 @@
 import argparse
 import socket
 import struct
-from time import sleep
 
 import carstat
+import dashboard
 import dummy_dash
 
 # Assigning sizes in bytes to each variable type
@@ -131,6 +131,8 @@ def main(args) -> None:
 
         # Create a carstat object with the parsed data
         telemetry = carstat.telemetry(returned_data)
+
+        dashboard.update(telemetry)
 
         # Write all items in returned_data to a telemetry log file, tab delimited
         if args.log:
