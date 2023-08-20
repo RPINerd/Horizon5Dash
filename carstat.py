@@ -6,7 +6,7 @@ class telemetry:
         self.timestamp = returned_data["TimestampMS"]
         
         # Basic car metrics
-        self.rpm            = int(returned_data["CurrentEngineRpm"])
+        self.rpm            = returned_data["CurrentEngineRpm"]
         self.speed          = returned_data["Speed"]
         self.power          = returned_data["Power"]
         self.torque         = returned_data["Torque"]
