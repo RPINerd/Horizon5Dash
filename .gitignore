@@ -9,4 +9,5 @@ __pycache__/
 
 # Misc
 server.py
-telemetry_log.tsv
+#telemetry_log.tsv
+*.AppImage
