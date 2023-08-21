@@ -1,5 +1,6 @@
 # This is just a driver for running the dash script off of a previously generated telemetry log
 
+import pickle
 from time import sleep
 
 import carstat
@@ -12,18 +13,34 @@ def dump(ip, port, data_types) -> None:
     # Establish connection to the telemetry output
     sock = utils.open_socket(str(ip), port)
 
-    with open("telemetry_log.tsv", "w") as logfile:
-        while True:
-            # Recieve incoming data
-            data, address = sock.recvfrom(1500)
+    pickle_list = []
+    while True:
 
-            # Convert recieved data to a dictionary
-            returned_data = utils.get_data(data, data_types)
+        # Break the loop when the user presses Ctrl+C
+        try:
+            pass
+        except KeyboardInterrupt:
+            break
 
-            # Write all items in returned_data to a telemetry log file, tab delimited
-            for key in returned_data:
-                logfile.write(str(returned_data[key]) + "\t")
-            logfile.write("\n")
+        # Recieve incoming data
+        data, address = sock.recvfrom(1500)
+
+        # Convert recieved data to a dictionary
+        returned_data = utils.get_data(data, data_types)
+
+        # Create a pickle of the returned data and append it to the pickle_list
+        pickle_list.append(pickle.dumps(returned_data))
+
+        # Write all items in returned_data to a telemetry log file, tab delimited
+        # for key in returned_data:
+        #     logfile.write(str(returned_data[key]) + "\t")
+        # logfile.write("\n")
+
+        sleep(0.01)
+    
+    # Once the loop is broken, write the pickle_list to a file
+    with open("telemetry_log.pkl", "wb") as pkl:
+        pickle.dump(pickle_list, pkl)
 
 
 def main(args, task) -> None:
