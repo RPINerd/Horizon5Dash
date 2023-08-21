@@ -43,6 +43,27 @@ def dump(ip, port, data_types) -> None:
         pickle.dump(pickle_list, pkl)
 
 
+def dryrun(args) -> None:
+
+    # Parse the previously saved telemetry data from the pickle file
+    with open("telemetry_log.pkl", "rb") as pkl:
+        pickle_list = pickle.load(pkl)
+
+    
+    # Step through the pickle_list and plot the data as if it were live
+    print("Speed | RPM | Gear")
+    for tele_point in pickle_list:
+        #cols = line.split("\t")
+        #returned_data = utils.parse_data(cols, data_types)
+        returned_data = pickle.loads(tele_point)
+        telemetry = carstat.telemetry(returned_data)
+        #dashboard.plot(telemetry)
+        print(
+            f"{int(telemetry.speed)} | {int(telemetry.rpm)} | {telemetry.gear}",
+            end="\r",
+        )
+        sleep(0.01)
+
 def main(args, task) -> None:
     
     # Read in data types from file
@@ -57,18 +78,7 @@ def main(args, task) -> None:
         return
     
     elif task == "run":
-        print("Speed | RPM | Gear")
-        with open("telemetry_log.tsv", "r") as data:
-            for line in data:
-                cols = line.split("\t")
-                returned_data = utils.parse_data(cols, data_types)
-                telemetry = carstat.telemetry(returned_data)
-                dashboard.plot(telemetry)
-                print(
-                    f"{int(float(telemetry.speed))} | {int(float(telemetry.rpm))} | {str(telemetry.gear)}",
-                    end="\r",
-                )
-                sleep(0.01)
+        dryrun()
         return
     
     else:
