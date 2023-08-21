@@ -18,10 +18,14 @@ def plot(telemetry) -> None:
         x_vals.append(telemetry.timestamp)
         y_vals.append(telemetry.rpm)
 
+        plt.cla()
         plt.plot(x_vals, y_vals)
+
+        plt.legend(loc="upper left")
+        plt.tight_layout()
+
         return x_vals, y_vals
 
     ani = animation.FuncAnimation(plt.gcf(), animate, interval=20, frames=100)
 
-    plt.tight_layout()
     plt.show()
