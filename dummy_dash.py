@@ -4,23 +4,30 @@ from time import sleep
 
 import carstat
 import dashboard
+import utils
 
 
-def parse_data(data, data_types) -> dict:
+def dump(ip, port, data_types) -> None:
+
+    # Establish connection to the telemetry output
+    sock = utils.open_socket(str(ip), port)
+
+    with open("telemetry_log.tsv", "w") as logfile:
+        while True:
+            # Recieve incoming data
+            data, address = sock.recvfrom(1500)
+
+            # Convert recieved data to a dictionary
+            returned_data = utils.get_data(data, data_types)
+
+            # Write all items in returned_data to a telemetry log file, tab delimited
+            for key in returned_data:
+                logfile.write(str(returned_data[key]) + "\t")
+            logfile.write("\n")
+
+
+def main(args, task) -> None:
     
-    return_dict = {}
-
-    # For each data type, get size and then collect
-    i = 0
-    for key in data_types:
-        # Join the key from the data_types dict with the values from the current data
-        return_dict[key] = data[i]
-
-        i += 1
-
-    return return_dict
-
-def main() -> None:
     # Read in data types from file
     data_types = {}
     with open("data_formats.txt", "r") as f:
@@ -28,23 +35,25 @@ def main() -> None:
         for line in lines:
             data_types[line.split()[1]] = line.split()[0]
 
-    #dashboard.build()
-
-    dashboard.plot()
-
-    print("Speed | RPM | Gear")
-    with open("telemetry_log.tsv", "r") as data:
-        for line in data:
-            cols = line.split("\t")
-            returned_data = parse_data(cols, data_types)
-            telemetry = carstat.telemetry(returned_data)
-            #dashboard.update(telemetry)
-            print(
-                f"{int(float(telemetry.speed))} | {int(float(telemetry.rpm))} | {str(telemetry.gear)}",
-                end="\r",
-            )
-            sleep(0.001)
-
-
-if __name__ == "__main__":
-    main()
+    if task == "dump":
+        dump(args.ip, args.port, data_types)
+        return
+    
+    elif task == "run":
+        print("Speed | RPM | Gear")
+        with open("telemetry_log.tsv", "r") as data:
+            for line in data:
+                cols = line.split("\t")
+                returned_data = utils.parse_data(cols, data_types)
+                telemetry = carstat.telemetry(returned_data)
+                dashboard.plot(telemetry)
+                print(
+                    f"{int(float(telemetry.speed))} | {int(float(telemetry.rpm))} | {str(telemetry.gear)}",
+                    end="\r",
+                )
+                sleep(0.01)
+        return
+    
+    else:
+        print("Invalid task")
+        return
