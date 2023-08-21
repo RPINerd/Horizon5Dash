@@ -14,12 +14,10 @@ def dump(ip, port, data_types) -> None:
     sock = utils.open_socket(str(ip), port)
 
     pickle_list = []
+    i = 0
     while True:
 
-        # Break the loop when the user presses Ctrl+C
-        try:
-            pass
-        except KeyboardInterrupt:
+        if i == 3000:
             break
 
         # Recieve incoming data
@@ -36,6 +34,8 @@ def dump(ip, port, data_types) -> None:
         #     logfile.write(str(returned_data[key]) + "\t")
         # logfile.write("\n")
 
+        i += 1
+        print(i, end="\r")
         sleep(0.01)
     
     # Once the loop is broken, write the pickle_list to a file
