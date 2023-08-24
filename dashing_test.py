@@ -1,13 +1,6 @@
-# Functions for displaying and updating the dashboard
-
-
 import math
 from time import sleep, time
 
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 from dashing import (
     ColorRangeVGauge,
     HBrailleChart,
@@ -22,8 +15,7 @@ from dashing import (
     VSplit,
 )
 
-
-def build_ui():
+if __name__ == "__main__":
     ui = HSplit(
         VSplit(
             HGauge(val=50, title="only title", border_color=5),
@@ -57,14 +49,10 @@ def build_ui():
             VChart(border_color=2, color=2),
             HChart(border_color=2, color=2),
             HBrailleChart(border_color=2, color=2),
-            # HBrailleFilledChart(border_color=2, color=2),
+            HBrailleFilledChart(border_color=2, color=2),
         ),
         title="Dashing",
     )
-    return ui
-
-
-def update_ui(ui):
     log = ui.items[1].items[1]
     vchart = ui.items[1].items[2]
     hchart = ui.items[1].items[3]
@@ -93,28 +81,4 @@ def update_ui(ui):
         bfchart.append(50 + 50 * math.sin(cycle / 16.0))
         ui.display()
 
-        sleep(1.0 / 25)
-
-
-def plot(telemetry) -> None:
-    plt.style.use("fivethirtyeight")
-
-    x_vals = [telemetry[i].timestamp for i in range(len(telemetry))]
-    y_vals = [telemetry[i].rpm for i in range(len(telemetry))]
-
-    # def animate(i):
-    #     x_vals.append(telemetry.timestamp)
-    #     y_vals.append(telemetry.rpm)
-
-    #     plt.cla()
-    #     plt.plot(x_vals, y_vals)
-
-    #     plt.legend(loc="upper left")
-    #     plt.tight_layout()
-
-    #     return x_vals, y_vals
-
-    # ani = animation.FuncAnimation(plt.gcf(), animate, interval=20, frames=100)
-    plt.plot(x_vals, y_vals)
-    plt.tight_layout()
-    plt.show()
+        sleep(1 / 60)
