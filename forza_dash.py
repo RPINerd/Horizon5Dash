@@ -61,12 +61,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main(args) -> None:
-    
-    # Read in data types from file
-    #? Over engineered for use with only 1 game, but good for future expansion
-    data_types = utils.get_datatypes()
-
+def main(args, data_types) -> None:
     # Establish connection to the telemetry output
     sock = utils.open_socket(str(args.ip), 10000)
 
@@ -96,7 +91,7 @@ def main(args) -> None:
         else:
             telemetry_window.pop(0)
             telemetry_window.append(telemetry)
-        
+
         # Send telemetry to the desired ouput
         if not args.cli:
             dashboard.plot(telemetry_window)
@@ -105,12 +100,15 @@ def main(args) -> None:
 
 
 if __name__ == "__main__":
-
     args = parse_args()
-    
+
+    # Read in data types from file
+    # ? Over engineered for use with only 1 game, but good for future expansion
+    data_types = utils.get_datatypes()
+
     if args.dryrun:
-        dummy_dash.main(args, "run")
+        dummy_dash.main(args, data_types, "run")
     elif args.dump:
         dummy_dash.main(args, "dump")
     else:
-        main(args)
+        main(args, data_types)

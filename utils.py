@@ -14,7 +14,6 @@ BYTESKU = {
 
 
 def get_datatypes(formats_file="data_formats.txt") -> dict:
-    
     # Read in data types from file
     data_types = {}
     with open(formats_file, "r") as f:
@@ -26,7 +25,6 @@ def get_datatypes(formats_file="data_formats.txt") -> dict:
 
 
 def open_socket(server_address, port) -> socket.socket:
-    
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -37,7 +35,6 @@ def open_socket(server_address, port) -> socket.socket:
 
 
 def get_data(data, data_types) -> dict:
-    
     return_dict = {}
 
     # Additional var
@@ -74,7 +71,6 @@ def get_data(data, data_types) -> dict:
 
 
 def parse_data(data, data_types) -> dict:
-    
     return_dict = {}
 
     # For each data type, get size and then collect
