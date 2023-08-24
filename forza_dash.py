@@ -8,6 +8,7 @@ import argparse
 import carstat
 import dashboard
 import dummy_dash
+import termdash
 import utils
 
 
@@ -33,6 +34,13 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=100,
         help="Number of historical data points to display in the dashboard",
+    )
+    parser.add_argument(
+        "--cli",
+        "-c",
+        action="store_true",
+        default=False,
+        help="Display the telemetry data in the command line",
     )
     run_type = parser.add_mutually_exclusive_group(required=False)
     run_type.add_argument(
@@ -63,7 +71,8 @@ def main(args) -> None:
     sock = utils.open_socket(str(args.ip), 10000)
 
     # Print a command line header for the monitoring data
-    print("Speed | RPM | Gear")
+    if args.cli:
+        termdash.build()
 
     # Sliding window for telemetry data
     telemetry_window = []
@@ -88,13 +97,11 @@ def main(args) -> None:
             telemetry_window.pop(0)
             telemetry_window.append(telemetry)
         
-        dashboard.plot(telemetry_window)
-
-        # Print some small monitoring data
-        print(
-            f"{int(telemetry.speed)} | {int(telemetry.rpm)} | {str(telemetry.gear)}",
-            end="\r",
-        )
+        # Send telemetry to the desired ouput
+        if not args.cli:
+            dashboard.plot(telemetry_window)
+        else:
+            termdash.update(telemetry_window)
 
 
 if __name__ == "__main__":
