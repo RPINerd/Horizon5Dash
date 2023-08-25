@@ -36,7 +36,7 @@ def open_socket(server_address, port) -> socket.socket:
     return sock
 
 
-def get_data(data, data_types) -> dict:
+def parse_data(data, data_types) -> dict:
     return_dict = {}
 
     # Additional var
@@ -72,26 +72,12 @@ def get_data(data, data_types) -> dict:
     return return_dict
 
 
-def parse_data(data, data_types) -> dict:
-    return_dict = {}
-
-    # For each data type, get size and then collect
-    i = 0
-    for key in data_types:
-        # Join the key from the data_types dict with the values from the current data
-        return_dict[key] = data[i]
-
-        i += 1
-
-    return return_dict
-
-
 def recieve_telemetry(sock: socket.socket, data_types: dict, telemetry_window: list, window_size: int) -> list:
     # Recieve incoming data
     data, address = sock.recvfrom(1500)
 
     # Convert recieved data to a dictionary
-    returned_data = get_data(data, data_types)
+    returned_data = parse_data(data, data_types)
 
     # Create a carstat object with the parsed data
     telemetry = carstat.telemetry(returned_data)

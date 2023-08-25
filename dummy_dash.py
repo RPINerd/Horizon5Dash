@@ -22,7 +22,7 @@ def dump(ip, port, data_types) -> None:
         data, address = sock.recvfrom(1500)
 
         # Convert recieved data to a dictionary
-        returned_data = utils.get_data(data, data_types)
+        returned_data = utils.parse_data(data, data_types)
 
         # Create a pickle of the returned data and append it to the pickle_list
         pickle_list.append(pickle.dumps(returned_data))
