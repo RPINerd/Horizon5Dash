@@ -1,6 +1,8 @@
 import socket
 import struct
 
+import carstat
+
 # Assigning sizes in bytes to each variable type
 BYTESKU = {
     "s32": 4,  # Signed 32bit int, 4 bytes of size
@@ -82,3 +84,25 @@ def parse_data(data, data_types) -> dict:
         i += 1
 
     return return_dict
+
+
+def recieve_telemetry(sock: socket.socket, data_types: dict, telemetry_window: list, window_size: int) -> list:
+    # Recieve incoming data
+    data, address = sock.recvfrom(1500)
+
+    # Convert recieved data to a dictionary
+    returned_data = get_data(data, data_types)
+
+    # Create a carstat object with the parsed data
+    telemetry = carstat.telemetry(returned_data)
+
+    # For a user definable spread of datapoints, build up a list of telemetry objects as
+    # data is streamed in. Once the list reaches the defined length, remove the oldest item
+    # when adding the next item. This allows for a rolling window of data to be displayed.
+    if len(telemetry_window) < window_size:
+        telemetry_window.append(telemetry)
+    else:
+        telemetry_window.pop(0)
+        telemetry_window.append(telemetry)
+
+    return telemetry_window

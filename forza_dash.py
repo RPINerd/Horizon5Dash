@@ -5,7 +5,6 @@
 
 import argparse
 
-import carstat
 import dashboard
 import dummy_dash
 import termdash
@@ -74,23 +73,8 @@ def main(args, data_types) -> None:
 
     # Primary loop
     while True:
-        # Recieve incoming data
-        data, address = sock.recvfrom(1500)
-
-        # Convert recieved data to a dictionary
-        returned_data = utils.get_data(data, data_types)
-
-        # Create a carstat object with the parsed data
-        telemetry = carstat.telemetry(returned_data)
-
-        # For a user definable spread of datapoints, build up a list of telemetry objects as
-        # data is streamed in. Once the list reaches the defined length, remove the oldest item
-        # when adding the next item. This allows for a rolling window of data to be displayed.
-        if len(telemetry_window) < args.window:
-            telemetry_window.append(telemetry)
-        else:
-            telemetry_window.pop(0)
-            telemetry_window.append(telemetry)
+        # Get the data from the socket
+        telemetry_window = utils.recieve_telemetry(sock, data_types, telemetry_window, args.window)
 
         # Send telemetry to the desired ouput
         if not args.cli:
