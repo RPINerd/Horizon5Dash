@@ -1,15 +1,18 @@
-# Forza Dash
-# A simple app for Forza Horizon 5 that can recieve the in-game telemetry
-# and display it in real time in a customizable dashboard.
-#
+"""
+    Forza Dash | RPINerd, 08/25/23
+
+    A simple app for Forza Horizon 5 that can recieve the in-game telemetry and display it
+    in real time in a customizable dashboard.
+
+"""
 
 import argparse
 import pickle
 from time import sleep
 
 import carstat
-import dashboard
-import termdash
+import gui_dash
+import terminal_dash
 import utils
 
 
@@ -82,15 +85,12 @@ def dryrun(window) -> None:
             telemetry_window.pop(0)
             telemetry_window.append(telemetry)
 
-        ui = dashboard.build_ui()
-        dashboard.update_ui(ui)
+        ui = gui_dash.build_ui()
+        gui_dash.update_ui(ui)
         sleep(0.01)
 
 
-def dump(ip, port, data_types) -> None:
-    # Establish connection to the telemetry output
-    sock = utils.open_socket(str(ip), port)
-
+def dump(sock, data_types) -> None:
     pickle_list = []
     i = 0
     while True:
@@ -115,39 +115,28 @@ def dump(ip, port, data_types) -> None:
         pickle.dump(pickle_list, pkl)
 
 
-def main(args, data_types) -> None:
-    # Establish connection to the telemetry output
-    sock = utils.open_socket(str(args.ip), 10000)
-
-    # Print a command line header for the monitoring data
-    if args.cli:
-        termdash.build()
-
-    # Sliding window for telemetry data
-    telemetry_window = []
-
-    # Primary loop
-    while True:
-        # Get the data from the socket
-        telemetry_window = utils.recieve_telemetry(sock, data_types, telemetry_window, args.window)
-
-        # Send telemetry to the desired ouput
-        if not args.cli:
-            dashboard.plot(telemetry_window)
-        else:
-            termdash.update(telemetry_window)
-
-
-if __name__ == "__main__":
-    args = parse_args()
+def main(args) -> None:
+    # Dryrun simulates the program running without a connection to the telemetry server.
+    # Requires a pickle file of previously saved telemetry data!
+    if args.dryrun:
+        dryrun(args.window)
+        exit()
 
     # Read in data types from file
     # ? Over engineered for use with only 1 game, but good for future expansion
     data_types = utils.get_datatypes()
 
-    if args.dryrun:
-        dryrun(args.window)
-    elif args.dump:
-        dump(args.ip, args.port, data_types)
+    # Establish connection to the telemetry output
+    sock = utils.open_socket(str(args.ip), 10000)
+
+    if args.dump:
+        dump(sock, data_types)
+    elif args.cli:
+        terminal_dash.main(args, sock, data_types)
     else:
-        main(args, data_types)
+        gui_dash.main(args, sock, data_types)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)
