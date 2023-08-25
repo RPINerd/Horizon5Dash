@@ -8,6 +8,5 @@
 __pycache__/
 
 # Misc
-server.py
 *.log
 *.AppImage
