@@ -2,9 +2,6 @@
     Functions for running the terminal based dashboard
 """
 
-import math
-from time import sleep, time
-
 from dashing import (
     ColorRangeVGauge,
     HBrailleChart,
@@ -25,51 +22,68 @@ import utils
 # Initialize the terminal based dashboard
 def build_ui():
     # Barebones output for now
-    print("Speed | RPM | Gear")
+    # print("Speed | RPM | Gear")
 
-    # Dashing UI Construction
-    ui = HSplit(
-        VSplit(
-            HGauge(val=50, title="only title", border_color=5),
-            HGauge(label="only label", val=20, border_color=5),
-            HGauge(label="only label", val=30, border_color=5),
-            HGauge(label="only label", val=50, border_color=5),
-            HGauge(label="only label", val=80, border_color=5),
-            HGauge(val=20),
-            HGauge(label="label, no border", val=55),
-            HSplit(
-                VGauge(val=0, border_color=2),
-                VGauge(val=5, border_color=2),
-                VGauge(val=30, border_color=2),
-                VGauge(val=50, border_color=2),
-                VGauge(val=80, border_color=2, color=4),
-                VGauge(val=95, border_color=2, color=3),
-                ColorRangeVGauge(
-                    val=100,
-                    border_color=2,
-                    colormap=(
-                        (33, 2),
-                        (66, 3),
-                        (100, 1),
-                    ),
-                ),
+    column0 = VSplit(
+        # RPM Gauge along the height of the left-most column
+        ColorRangeVGauge(
+            title="RPM: 100",
+            val=0,
+            border_color=2,
+            colormap=(
+                (70, 2),
+                (85, 3),
+                (95, 1),
             ),
         ),
-        VSplit(
-            Text("Hello World,\nthis is dashing.", border_color=2),
-            Log(title="logs", border_color=5),
-            VChart(border_color=2, color=2),
-            HChart(border_color=2, color=2),
-            HBrailleChart(border_color=2, color=2),
-            HBrailleFilledChart(border_color=2, color=2),
-        ),
-        title="Forza Dash",
     )
+
+    column1 = VSplit(
+        Text("", title="Car Info", color=1),
+        # Horizontal gauges along the bottom, summarizing control inputs
+        HSplit(
+            # Current speed and acceleration pedal position
+            VGauge(title="Speed", val=0, border_color=2, color=1),
+            # Brake pedal position
+            VGauge(title="Brake", val=0, border_color=2, color=1),
+        ),
+    )
+
+    column2 = VSplit(
+        HSplit(
+            ColorRangeVGauge(title="Front Left", border_color=2, colormap=((80, 2), (90, 1))),
+            ColorRangeVGauge(title="Front Right", border_color=2, colormap=((80, 2), (90, 1))),
+        ),
+        HSplit(
+            ColorRangeVGauge(title="Rear Left", border_color=2, colormap=((80, 2), (90, 1))),
+            ColorRangeVGauge(title="Rear Right", border_color=2, colormap=((80, 2), (90, 1))),
+        ),
+    )
+
+    column3 = VSplit(
+        Text("", title="Raw Telemetry", color=1),
+    )
+
+    # Dashing UI Construction
+    ui = HSplit(column0, column1, column2, column3, title="Forza Dash")
+
     return ui
 
 
 def main(args, sock, data_types):
+    # Build the UI
     ui = build_ui()
+
+    # Set some easy reference variables for the gauges
+    rpm = ui.items[0].items[0]
+    info = ui.items[1].items[0]
+    speed = ui.items[1].items[1].items[0]
+    brake = ui.items[1].items[1].items[1]
+    susp_norm_fl = ui.items[2].items[0].items[0]
+    susp_norm_fR = ui.items[2].items[0].items[1]
+    susp_norm_rl = ui.items[2].items[1].items[0]
+    susp_norm_rr = ui.items[2].items[1].items[1]
+    raw = ui.items[3].items[0]
 
     # Sliding window for telemetry data
     telemetry_window = []
@@ -81,38 +95,22 @@ def main(args, sock, data_types):
         # Get the most recent telemetry data
         telemetry = telemetry_window[-1]
 
-        # Print some small monitoring data
-        print(
-            f"{int(telemetry.speed)} | {int(telemetry.rpm)} | {str(telemetry.gear)}",
-            end="\r",
-        )
+        info.text = f"Class: {telemetry.carClass}\nPI: {telemetry.carPI}\nDrivetrain: \
+            {telemetry.drivetrainType}\nCylinders: {telemetry.numCylinders}\n \
+            Gear: {telemetry.gear}\nPower: {telemetry.power}\nTorque: {telemetry.torque}\n \
+            Boost: {telemetry.boost}"
 
-        log = ui.items[1].items[1]
-        vchart = ui.items[1].items[2]
-        hchart = ui.items[1].items[3]
-        bchart = ui.items[1].items[4]
-        bfchart = ui.items[1].items[5]
-        log.append("0 -----")
-        log.append("1 Hello")
-        log.append("2 -----")
-        prev_time = time()
-        for cycle in range(0, 200):
-            ui.items[0].items[0].value = int(50 + 49.9 * math.sin(cycle / 80.0))
-            ui.items[0].items[1].value = int(50 + 45 * math.sin(cycle / 20.0))
-            ui.items[0].items[2].value = int(50 + 45 * math.sin(cycle / 30.0 + 3))
+        speed.title = f"Speed: {int(telemetry.speed)} mph {telemetry.suspensionTravelNormFL}"
+        speed.value = telemetry.accel
+        brake.value = telemetry.brake
+        rpm.title = f"RPM   {int(telemetry.rpm)}"
+        rpm.value = telemetry.normalized_rpm()
+        susp_norm_fl.value = telemetry.suspensionTravelNormFL * 100
+        susp_norm_fR.value = telemetry.suspensionTravelNormFR * 100
+        susp_norm_rl.value = telemetry.suspensionTravelNormRL * 100
+        susp_norm_rr.value = telemetry.suspensionTravelNormRR * 100
 
-            vgauges = ui.items[0].items[-1].items
-            for gaugenum, vg in enumerate(vgauges):
-                vg.value = 50 + 49.9 * math.sin(cycle / 12.0 + gaugenum)
+        # For the final column, just output all the raw telemetry data along with lables
+        raw.text = f"Idle RPM: {telemetry.idleRpm}\nHandbrake: {telemetry.handBrake}\nClutch: {telemetry.clutch}\nCar Ordinal: {telemetry.carOrdinal}\nPosition X: {telemetry.positionX}\nPosition Y: {telemetry.positionY}\nPosition Z: {telemetry.positionZ}\nAcceleration X: {telemetry.accelX}\nAcceleration Z: {telemetry.accelZ}\nVelocity X: {telemetry.velX}\nVelocity Z: {telemetry.velZ}\nAngular Velocity X: {telemetry.angularVelX}\nAngular Velocity Z: {telemetry.angularVelZ}\nYaw: {telemetry.yaw}\nPitch: {telemetry.pitch}\nRoll: {telemetry.roll}\nAbsolute Suspension Travel FL: {telemetry.suspensionTravelAbsFL}\nAbsolute Suspension Travel FR: {telemetry.suspensionTravelAbsFR}\nAbsolute Suspension Travel RL: {telemetry.suspensionTravelAbsRL}\nAbsolute Suspension Travel RR: {telemetry.suspensionTravelAbsRR}\nTire Temp FL: {telemetry.tireTempFL}\nTire Temp FR: {telemetry.tireTempFR}\nTire Temp RL: {telemetry.tireTempRL}\nTire Temp RR: {telemetry.tireTempRR}\nSlip Ratio FL: {telemetry.tireSlipRatioFL}\nSlip Ratio FR: {telemetry.tireSlipRatioFR}\nSlip Ratio RL: {telemetry.tireSlipRatioRL}\nSlip Ratio RR: {telemetry.tireSlipRatioRR}\nTire Combined Slip FL: {telemetry.tireCombinedSlipFL}\nTire Combined Slip FR: {telemetry.tireCombinedSlipFR}\nTire Combined Slip RL: {telemetry.tireCombinedSlipRL}\nTire Combined Slip RR: {telemetry.tireCombinedSlipRR}\nWheel Rotation Speed FL: {telemetry.wheelRotationSpeedFL}\nWheel Rotation Speed FR: {telemetry.wheelRotationSpeedFR}\nWheel Rotation Speed RL: {telemetry.wheelRotationSpeedRL}\nWheel Rotation Speed RR: {telemetry.wheelRotationSpeedRR}\nSlip Angle FL: {telemetry.tireSlipAngleFL}\nSlip Angle FR: {telemetry.tireSlipAngleFR}\nSlip Angle RL: {telemetry.tireSlipAngleRL}\nSlip Angle RR: {telemetry.tireSlipAngleRR}\nRace On: {telemetry.raceOn}\nDistance Traveled: {telemetry.distanceTraveled}\nNorm Driving Line: {telemetry.normalizedDrivingLine}\nNorm AI Brake Diff: {telemetry.normalizedAIBrakeDifference}"
 
-            t = int(time())
-            if t != prev_time:
-                log.append("%s" % t)
-                prev_time = t
-            vchart.append(50 + 50 * math.sin(cycle / 16.0))
-            hchart.append(99.9 * abs(math.sin(cycle / 26.0)))
-            bchart.append(50 + 50 * math.sin(cycle / 6.0))
-            bfchart.append(50 + 50 * math.sin(cycle / 16.0))
         ui.display()
-
-        sleep(1.0 / 60)
