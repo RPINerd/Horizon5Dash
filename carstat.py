@@ -75,10 +75,10 @@ class telemetry:
         self.suspensionTravelNormFR = round(returned_data["NormalizedSuspensionTravelFrontRight"], 6)
         self.suspensionTravelNormRL = round(returned_data["NormalizedSuspensionTravelRearLeft"], 6)
         self.suspensionTravelNormRR = round(returned_data["NormalizedSuspensionTravelRearRight"], 6)
-        self.suspensionTravelAbsFL = round(returned_data["SuspensionTravelMetersFrontLeft"], 6)
-        self.suspensionTravelAbsFR = round(returned_data["SuspensionTravelMetersFrontRight"], 6)
-        self.suspensionTravelAbsRL = round(returned_data["SuspensionTravelMetersRearLeft"], 6)
-        self.suspensionTravelAbsRR = round(returned_data["SuspensionTravelMetersRearRight"], 6)
+        self.suspensionTravelAbsFL = round(returned_data["SuspensionTravelMetersFrontLeft"] * 39.370079, 2)
+        self.suspensionTravelAbsFR = round(returned_data["SuspensionTravelMetersFrontRight"] * 39.370079, 2)
+        self.suspensionTravelAbsRL = round(returned_data["SuspensionTravelMetersRearLeft"] * 39.370079, 2)
+        self.suspensionTravelAbsRR = round(returned_data["SuspensionTravelMetersRearRight"] * 39.370079, 2)
 
         # Tire
         self.tireTempFL = round(returned_data["TireTempFrontLeft"], 2)
