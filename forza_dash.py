@@ -49,18 +49,18 @@ def parse_args() -> argparse.Namespace:
     run_type = parser.add_mutually_exclusive_group(required=False)
     run_type.add_argument(
         "--dump",
-        "-o",
+        "-d",
         action="store_true",
         default=False,
         help="Dump the telemetry data to a log file",
     )
-    run_type.add_argument(
-        "--dryrun",
-        "-d",
-        action="store_true",
-        default=False,
-        help="Run the program without connecting to a telemetry server",
-    )
+    # run_type.add_argument(
+    #     "--dryrun",
+    #     "-d",
+    #     action="store_true",
+    #     default=False,
+    #     help="Run the program without connecting to a telemetry server",
+    # )
 
     return parser.parse_args()
 
@@ -101,26 +101,26 @@ def dump(sock, data_types) -> None:
         data, address = sock.recvfrom(1500)
 
         # Convert recieved data to a dictionary
-        returned_data = utils.parse_data(data, data_types)
+        # returned_data = utils.parse_data(data, data_types)
 
         # Create a pickle of the returned data and append it to the pickle_list
-        pickle_list.append(pickle.dumps(returned_data))
+        pickle_list.append(pickle.dumps(data))
 
         i += 1
         print(i, end="\r")
         sleep(0.01)
 
     # Once the loop is broken, write the pickle_list to a file
-    with open("telemetry_log.pkl", "wb") as pkl:
+    with open("telemetry.pkl", "wb") as pkl:
         pickle.dump(pickle_list, pkl)
 
 
 def main(args) -> None:
     # Dryrun simulates the program running without a connection to the telemetry server.
     # Requires a pickle file of previously saved telemetry data!
-    if args.dryrun:
-        dryrun(args.window)
-        exit()
+    # if args.dryrun:
+    #     dryrun(args.window)
+    #     exit()
 
     # Read in data types from file
     # ? Over engineered for use with only 1 game, but good for future expansion
